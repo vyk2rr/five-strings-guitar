@@ -27,7 +27,7 @@ export interface PianoBaseProps {
   octave?: tOctaveRange;
   octaves?: tOctaveRange;
   highlightOnThePiano?: tChord;
-  errorNotes?: string[]; // Add errorNotes prop
+  errorNotes?: tChord;
   sequenceToPlay?: tSequenceToPlayProps;
   pianoObservable?: PianoObserver;
   className?: string;
