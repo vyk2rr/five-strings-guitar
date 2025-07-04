@@ -40,10 +40,38 @@ function Synth(...args) {
 function PolySynth(...args) {
   this.triggerAttackRelease = triggerAttackReleaseMock;
   this.chain = jest.fn(() => this);
-  this.connect = jest.fn(() => this); // FIX: Should return `this`
+  this.connect = jest.fn(() => this);
   this.dispose = jest.fn();
   this.toDestination = jest.fn(() => this);
 }
+
+// --- AÑADE ESTA FUNCIÓN ---
+function Frequency(note) {
+  const chromatic = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const noteMatch = note.match(/([A-G]#?)(\d+)/);
+  if (!noteMatch) return { transpose: () => ({ toNote: () => 'C4' }) };
+
+  const [, noteName, octaveStr] = noteMatch;
+  const octave = parseInt(octaveStr, 10);
+
+  return {
+    transpose: jest.fn((interval) => {
+      const startIndex = chromatic.indexOf(noteName);
+      if (startIndex === -1) return { toNote: () => 'C4' };
+
+      const totalSemitones = startIndex + interval;
+      const newNoteIndex = totalSemitones % 12;
+      const octaveOffset = Math.floor(totalSemitones / 12);
+      const newNoteName = chromatic[newNoteIndex];
+      const newOctave = octave + octaveOffset;
+      
+      return {
+        toNote: jest.fn(() => `${newNoteName}${newOctave}`),
+      };
+    }),
+  };
+}
+// --- FIN DE LA FUNCIÓN AÑADIDA ---
 
 function Filter(...args) {
   this.dispose = filterDisposeMock;
@@ -96,6 +124,7 @@ module.exports = {
   Time: allowNewless(Time),
   NoiseSynth: allowNewless(NoiseSynth),
   Gain: allowNewless(Gain),
+  Frequency: allowNewless(Frequency),
 
   now: jest.fn(() => 500),
   start: jest.fn(() => Promise.resolve()),
