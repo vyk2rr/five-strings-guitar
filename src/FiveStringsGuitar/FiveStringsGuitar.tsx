@@ -3,7 +3,7 @@ import type { tChord, tNoteWithOctave } from '../PianoBase/PianoBase.types';
 
 interface FiveStringsGuitarProps {
   chord?: tChord;
-  onUnassignedNotes?: (notes: string[]) => void;
+  onUnassignedNotes?: (notes: tChord) => void;
 }
 
 type tBestFit = {
@@ -11,31 +11,31 @@ type tBestFit = {
   fret: number;
 };
 
+const strings = [
+  { startNote: 'D4', thickness: 4, octave: 4 },
+  { startNote: 'A4', thickness: 3, octave: 4 },
+  { startNote: 'E5', thickness: 2.5, octave: 5 },
+  { startNote: 'A5', thickness: 2, octave: 5 },
+  { startNote: 'D6', thickness: 1.5, octave: 6 }
+];
+
+const chromaticNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+const getNoteAtFret = (startNote: string, fret: number): tNoteWithOctave => {
+  const noteOnly = startNote.replace(/\d+/, '');
+  const octave = parseInt(startNote.match(/\d+/)?.[0] || '4');
+  const startIndex = chromaticNotes.indexOf(noteOnly);
+  const totalSemitones = startIndex + fret;
+  const newNoteIndex = totalSemitones % 12;
+  const newOctave = octave + Math.floor(totalSemitones / 12);
+  return (chromaticNotes[newNoteIndex] + newOctave) as tNoteWithOctave;
+};
+
 const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
   chord,
   onUnassignedNotes,
 }) => {
   const [highlightedPositions, setHighlightedPositions] = useState(new Set<string>());
-
-  const strings = [
-    { startNote: 'D4', thickness: 4, octave: 4 },
-    { startNote: 'A4', thickness: 3, octave: 4 },
-    { startNote: 'E5', thickness: 2.5, octave: 5 },
-    { startNote: 'A5', thickness: 2, octave: 5 },
-    { startNote: 'D6', thickness: 1.5, octave: 6 }
-  ];
-
-  const chromaticNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-
-  const getNoteAtFret = (startNote: string, fret: number): tNoteWithOctave => {
-    const noteOnly = startNote.replace(/\d+/, '');
-    const octave = parseInt(startNote.match(/\d+/)?.[0] || '4');
-    const startIndex = chromaticNotes.indexOf(noteOnly);
-    const totalSemitones = startIndex + fret;
-    const newNoteIndex = totalSemitones % 12;
-    const newOctave = octave + Math.floor(totalSemitones / 12);
-    return (chromaticNotes[newNoteIndex] + newOctave) as tNoteWithOctave;
-  };
 
   useEffect(() => {
     const newHighlightedPositions = new Set<string>();

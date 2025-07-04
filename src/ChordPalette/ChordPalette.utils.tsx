@@ -1,7 +1,7 @@
 import * as Tone from "tone";
 import { CHORD_INTERVALS, CHORD_QUALITIES as ALL_CHORD_QUALITIES_ARRAY } from "../PianoBase/PianoBase.types";
 import type {
-  tChord, tNote, tNoteWithOctave, tChordQualities,
+  tChord, tNoteWithOctave, tChordQualities,
   tChordWithName, tOctaveRange, tNoteName
 } from "../PianoBase/PianoBase.types";
 

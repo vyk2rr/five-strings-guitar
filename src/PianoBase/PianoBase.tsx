@@ -7,6 +7,22 @@ import useToneJs from "../hooks/useToneJs/useToneJs";
 import type { SupportedSynthType } from "../hooks/useToneJs/useToneJs";
 import './PianoBase.css';
 
+export interface RenderUIParams {
+  white: tChord;
+  black: tChord;
+  octaves: tOctaveRange;
+  octave: tOctaveRange;
+  handlePianoKeyClick: (note: tNoteWithOctave) => void;
+  isNoteActive: (note: tNoteWithOctave) => {
+    clicked: boolean;
+    group1: boolean;
+    group2: boolean;
+  };
+  getBlackKeyLeft: (note: tNoteWithOctave, whiteKeys: tChord) => string;
+  getBlackKeyWidth: (octaves: tOctaveRange) => string;
+  getAlternativeNotation: (note: tNoteWithOctave) => string;
+}
+
 export interface PianoBaseProps {
   octave?: tOctaveRange;
   octaves?: tOctaveRange;
@@ -15,7 +31,7 @@ export interface PianoBaseProps {
   sequenceToPlay?: tSequenceToPlayProps;
   pianoObservable?: PianoObserver;
   className?: string;
-  renderUI?: (params: any) => React.ReactNode;
+  renderUI?: (params: RenderUIParams) => React.ReactNode;
   createSynth?: () => SupportedSynthType;
 }
 

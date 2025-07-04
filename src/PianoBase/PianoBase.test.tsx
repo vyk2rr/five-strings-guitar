@@ -48,6 +48,7 @@ describe('PianoBase', () => {
       playNote: jest.fn(),
       playChord: jest.fn(),
       playArpeggio: jest.fn(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       durationToMs: jest.fn((duration: any) => (typeof duration === 'number' ? duration : 250)),
       setBpm: jest.fn(),
       cancelScheduledEvents: jest.fn(),

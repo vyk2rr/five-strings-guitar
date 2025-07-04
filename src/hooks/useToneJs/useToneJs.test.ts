@@ -1,9 +1,13 @@
 import { renderHook, act } from '@testing-library/react';
 import useToneJs from './useToneJs';
 import type { tChord, tMelodySequence } from '../../PianoBase/PianoBase.types';
+import * as Tone from 'tone';
 
 jest.mock('tone');
-const { triggerAttackReleaseMock, getTransport, getDestination } = require('tone');
+
+// Cast the imported Tone module to its mocked version to access mock functions
+const ToneMock = Tone as jest.Mocked<typeof Tone>;
+const { getTransport, getDestination, Part: PartMock } = ToneMock;
 
 describe('useToneJs', () => {
   beforeEach(() => {
@@ -23,7 +27,6 @@ describe('useToneJs', () => {
     await act(async () => {
       await result.current.start();
     });
-    const ToneMock = require('tone');
     expect(ToneMock.start).toHaveBeenCalled();
     expect(getTransport().start).toHaveBeenCalled();
     expect(result.current.isReady).toBe(true);
@@ -79,7 +82,10 @@ describe('useToneJs', () => {
     await act(async () => {
       await result.current.playNote('C4', '8n');
     });
-    expect(triggerAttackReleaseMock).toHaveBeenCalledWith('C4', '8n', undefined, 0.7);
+    expect(result.current.synthRef.current).toBeDefined();
+    if (result.current.synthRef.current) {
+      expect(result.current.synthRef.current.triggerAttackRelease).toHaveBeenCalledWith('C4', '8n', undefined, 0.7);
+    }
   });
 
   it('playChord() calls triggerAttackRelease with array', async () => {
@@ -91,7 +97,11 @@ describe('useToneJs', () => {
     await act(async () => {
       await result.current.playChord(chord, '4n');
     });
-    expect(triggerAttackReleaseMock).toHaveBeenCalledWith(chord, '4n', undefined, 0.7);
+
+    expect(result.current.synthRef.current).toBeDefined();
+    if (result.current.synthRef.current) {
+      expect(result.current.synthRef.current.triggerAttackRelease).toHaveBeenCalledWith(chord, '4n', undefined, 0.7);
+    }
   });
 
   it('playArpeggio() calls triggerAttackRelease for each note', async () => {
@@ -103,10 +113,15 @@ describe('useToneJs', () => {
     await act(async () => {
       await result.current.playArpeggio(chord, '8n', '16n');
     });
-    expect(triggerAttackReleaseMock).toHaveBeenCalledWith('C4', '8n', undefined, 0.7);
-    expect(triggerAttackReleaseMock).toHaveBeenCalledWith('E4', '8n', undefined, 0.7);
-    expect(triggerAttackReleaseMock).toHaveBeenCalledWith('G4', '8n', undefined, 0.7);
-    expect(triggerAttackReleaseMock).toHaveBeenCalledTimes(3);
+    
+    expect(result.current.synthRef.current).toBeDefined();
+    if (result.current.synthRef.current) {
+      const synthMock = result.current.synthRef.current.triggerAttackRelease;
+      expect(synthMock).toHaveBeenCalledWith('C4', '8n', undefined, 0.7);
+      expect(synthMock).toHaveBeenCalledWith('E4', '8n', undefined, 0.7);
+      expect(synthMock).toHaveBeenCalledWith('G4', '8n', undefined, 0.7);
+      expect(synthMock).toHaveBeenCalledTimes(3);
+    }
   });
 
   it('durationToMs converts duration to milliseconds', () => {
@@ -124,7 +139,6 @@ describe('useToneJs', () => {
       result.current.scheduleMelody(sequence, onEventCallback, onComplete);
     });
 
-    const PartMock = require('tone').Part;
     expect(PartMock).toHaveBeenCalled();
   });
 });
