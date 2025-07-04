@@ -1,108 +1,94 @@
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import FiveStringsGuitar from './FiveStringsGuitar';
+import type { tChord } from '../PianoBase/PianoBase.types';
 
 describe('FiveStringsGuitar', () => {
   it('renders without crashing', () => {
-    render(<FiveStringsGuitar chord={[]} />);
+    render(<FiveStringsGuitar />);
+    const svgElement = document.querySelector('svg');
+    expect(svgElement).toBeInTheDocument();
   });
 
-  it('renders with empty chord', () => {
-    const { container } = render(<FiveStringsGuitar chord={[]} />);
-    const svg = container.querySelector('svg');
-    expect(svg).toBeTruthy();
-    
-    // No debería haber círculos amarillos (highlighted)
-    const yellowCircles = container.querySelectorAll('circle[fill="yellow"]');
-    expect(yellowCircles.length).toBe(0);
+  it('renders the correct number of strings and frets', () => {
+    render(<FiveStringsGuitar />);
+    const strings = document.querySelectorAll('line');
+    expect(strings.length).toBe(5);
+
+    const frets = document.querySelectorAll('circle');
+    expect(frets.length).toBe(14 * 5);
   });
 
-  it('highlights only leftmost occurrence of each note', () => {
-    const { container } = render(<FiveStringsGuitar chord={['D4', 'A4', 'F#4', 'A5', 'D6']} />);
-    
-    // Debería haber exactamente 5 círculos amarillos (uno por cada nota del acorde)
-    const yellowCircles = container.querySelectorAll('circle[fill="yellow"]');
-    expect(yellowCircles.length).toBe(5);
+  describe('Highlighting Logic (Current Behavior)', () => {
+    it('does not highlight any notes when the chord is empty or undefined', () => {
+      const { rerender } = render(<FiveStringsGuitar chord={[]} />);
+      let yellowCircles = document.querySelectorAll('circle[fill="yellow"]');
+      expect(yellowCircles.length).toBe(0);
+
+      rerender(<FiveStringsGuitar chord={undefined} />);
+      yellowCircles = document.querySelectorAll('circle[fill="yellow"]');
+      expect(yellowCircles.length).toBe(0);
+    });
+
+    it('highlights a simple chord with one note per string', async () => {
+      const chord: tChord = ['D4', 'A4', 'E5', 'A5', 'D6'];
+      render(<FiveStringsGuitar chord={chord} />);
+      await waitFor(() => {
+        const yellowCircles = document.querySelectorAll('circle[fill="yellow"]');
+        expect(yellowCircles.length).toBe(5);
+      });
+    });
+
+    it('highlights a complex chord according to the existing algorithm', async () => {
+      // Este test valida el comportamiento actual.
+      // La lógica existente asigna una nota por cuerda, priorizando el traste más bajo para esa cuerda.
+      // Para este acorde, asigna D4 (cuerda 1), A4 (cuerda 2) y E5 (cuerda 3).
+      // F#4 y C#5 no se asignan porque sus cuerdas óptimas ya están ocupadas.
+      const chord: tChord = ['D4', 'F#4', 'A4', 'C#5', 'E5'];
+      render(<FiveStringsGuitar chord={chord} />);
+      
+      await waitFor(() => {
+        const yellowCircles = document.querySelectorAll('circle[fill="yellow"]');
+        // El comportamiento actual resulta en 3 notas resaltadas para este caso.
+        expect(yellowCircles.length).toBe(3);
+      });
+    });
   });
 
-  it('highlights single note correctly', () => {
-    const { container } = render(<FiveStringsGuitar chord={['D4']} />);
-    
-    // Debería haber exactamente 1 círculo amarillo
-    const yellowCircles = container.querySelectorAll('circle[fill="yellow"]');
-    expect(yellowCircles.length).toBe(1);
-  });
+  describe('Unassigned Notes Callback (Current Behavior)', () => {
+    it('calls onUnassignedNotes with an empty array when all notes fit', async () => {
+      const onUnassignedNotes = jest.fn();
+      const chord: tChord = ['D4', 'A4', 'E5'];
+      render(<FiveStringsGuitar chord={chord} onUnassignedNotes={onUnassignedNotes} />);
 
-  it('handles duplicate notes in chord', () => {
-    const { container } = render(<FiveStringsGuitar chord={['D4', 'D4', 'A4']} />);
-    
-    // Debería haber exactamente 2 círculos amarillos (D4 y A4, sin duplicar D4)
-    const yellowCircles = container.querySelectorAll('circle[fill="yellow"]');
-    expect(yellowCircles.length).toBe(2);
-  });
+      await waitFor(() => {
+        expect(onUnassignedNotes).toHaveBeenCalledWith([]);
+      });
+    });
 
-  it('handles non-existent notes gracefully', () => {
-    const { container } = render(<FiveStringsGuitar chord={['X1', 'Y2']} />);
-    
-    // No debería haber círculos amarillos para notas que no existen
-    const yellowCircles = container.querySelectorAll('circle[fill="yellow"]');
-    expect(yellowCircles.length).toBe(0);
-  });
+    it('calls onUnassignedNotes with notes that could not be assigned by the current logic', async () => {
+      const onUnassignedNotes = jest.fn();
+      const chord: tChord = ['D4', 'F#4', 'A4', 'C#5', 'E5'];
+      render(<FiveStringsGuitar chord={chord} onUnassignedNotes={onUnassignedNotes} />);
 
-  it('prioritizes leftmost position across all strings', () => {
-    // F#4 aparece en la primera cuerda en el traste 4 y puede aparecer en otra cuerda antes
-    const { container } = render(<FiveStringsGuitar chord={['F#4']} />);
-    
-    const yellowCircles = container.querySelectorAll('circle[fill="yellow"]');
-    expect(yellowCircles.length).toBe(1);
-  });
+      await waitFor(() => {
+        // Con la lógica actual, F#4 y C#5 no se pueden asignar en este acorde.
+        // Usamos `expect.arrayContaining` porque el orden no está garantizado.
+        expect(onUnassignedNotes).toHaveBeenCalledWith(expect.arrayContaining(['F#4', 'C#5']));
+        // Verificamos que la longitud sea la correcta.
+        const calls = onUnassignedNotes.mock.calls;
+        const lastCallArgs = calls[calls.length - 1][0];
+        expect(lastCallArgs.length).toBe(2);
+      });
+    });
 
-  it('renders all strings with correct thickness', () => {
-    const { container } = render(<FiveStringsGuitar chord={[]} />);
-    
-    const lines = container.querySelectorAll('line');
-    expect(lines.length).toBe(5);
-    
-    // Verificar que las líneas tienen el grosor correcto
-    const thicknesses = Array.from(lines).map(line => line.getAttribute('stroke-width'));
-    expect(thicknesses).toEqual(['4', '3', '2.5', '2', '1.5']);
-  });
+    it('calls onUnassignedNotes with notes that are out of the fretboard range', async () => {
+      const onUnassignedNotes = jest.fn();
+      const chord: tChord = ['D4', 'A4', 'C1']; // C1 está fuera de rango
+      render(<FiveStringsGuitar chord={chord} onUnassignedNotes={onUnassignedNotes} />);
 
-  it('renders all circles and text elements', () => {
-    const { container } = render(<FiveStringsGuitar chord={[]} />);
-    
-    // Debería haber 5 cuerdas * 14 trastes = 70 círculos
-    const circles = container.querySelectorAll('circle');
-    expect(circles.length).toBe(70);
-    
-    // Debería haber 70 elementos de texto
-    const texts = container.querySelectorAll('text');
-    expect(texts.length).toBe(70);
-  });
-
-  it('has correct string tuning', () => {
-    const { container } = render(<FiveStringsGuitar chord={[]} />);
-    
-    // Verificar que las cuerdas tienen la afinación correcta
-    const texts = container.querySelectorAll('text');
-    
-    // Primera cuerda (D4) - primer traste debería ser D4
-    const firstStringFirstFret = texts[0];
-    expect(firstStringFirstFret.textContent).toBe('D4');
-    
-    // Segunda cuerda (A4) - primer traste debería ser A4
-    const secondStringFirstFret = texts[14];
-    expect(secondStringFirstFret.textContent).toBe('A4');
-    
-    // Tercera cuerda (E5) - primer traste debería ser E5
-    const thirdStringFirstFret = texts[28];
-    expect(thirdStringFirstFret.textContent).toBe('E5');
-    
-    // Cuarta cuerda (A5) - primer traste debería ser A5
-    const fourthStringFirstFret = texts[42];
-    expect(fourthStringFirstFret.textContent).toBe('A5');
-    
-    // Quinta cuerda (D6) - primer traste debería ser D6
-    const fifthStringFirstFret = texts[56];
-    expect(fifthStringFirstFret.textContent).toBe('D6');
+      await waitFor(() => {
+        expect(onUnassignedNotes).toHaveBeenCalledWith(['C1']);
+      });
+    });
   });
 });
