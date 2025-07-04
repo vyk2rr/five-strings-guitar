@@ -66,7 +66,7 @@ const PianoBase = forwardRef<PianoBaseHandle, PianoBaseProps>(({
     durationToMs,
     playArpeggio,
     playChord,
-  } = useToneJs({ bpm: 200, createSynth });
+  } = useToneJs({ bpm: 80, createSynth });
 
   useEffect(() => {
     // Limpia el grupo 0 antes de resaltar el nuevo acorde

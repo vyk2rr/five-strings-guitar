@@ -9,9 +9,9 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({ chord }) => {
   const strings = [
     { startNote: 'D4', thickness: 4, octave: 4 },
     { startNote: 'A4', thickness: 3, octave: 4 },
-    { startNote: 'E5', thickness: 2.5, octave: 5 },  // Cambiado de E4 a E5
+    { startNote: 'E5', thickness: 2.5, octave: 5 }, 
     { startNote: 'A5', thickness: 2, octave: 5 },
-    { startNote: 'D6', thickness: 1.5, octave: 6 }   // Cambiado de D5 a D6
+    { startNote: 'D6', thickness: 1.5, octave: 6 } 
   ];
 
   // Notas cromáticas para calcular las notas de cada traste
@@ -34,37 +34,33 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({ chord }) => {
   // Calcular qué posiciones deben ser resaltadas (solo la aparición más a la izquierda de cada nota)
   const getHighlightedPositions = () => {
     const highlightedPositions = new Set<string>();
-    const usedNotes = new Set<string>();
-    
-    if (!chord || chord.length === 0) return highlightedPositions; // Si no hay acorde, no resaltar nada
+    const usedStrings = new Set<number>(); // Para no permitir más de una nota por cuerda
 
-    // Para cada nota del acorde, encontrar su posición más a la izquierda
+    if (!chord || chord.length === 0) return highlightedPositions;
+
+    // Para cada nota del acorde, buscar su posición más a la izquierda en cuerdas disponibles
     for (const chordNote of chord) {
-      if (usedNotes.has(chordNote)) continue; // Ya procesamos esta nota
-      
-      let leftmostPosition: { stringIndex: number; fret: number } | null = null;
-      
-      // Buscar en todos los trastes (de izquierda a derecha)
+      // Explorar cada traste
+      outerLoop:
       for (let fret = 0; fret < 14; fret++) {
-        // Buscar en todas las cuerdas para este traste
+        // Explorar cuerdas en orden
         for (let stringIndex = 0; stringIndex < strings.length; stringIndex++) {
-          const note = getNoteAtFret(strings[stringIndex].startNote, fret);
-          
-          if (note === chordNote) {
-            leftmostPosition = { stringIndex, fret };
-            break; // Encontramos la primera aparición en este traste
+          // Si esta cuerda ya se usó, continuar con la siguiente
+          if (usedStrings.has(stringIndex)) continue;
+
+          const noteAtFret = getNoteAtFret(strings[stringIndex].startNote, fret);
+          if (noteAtFret === chordNote) {
+            // Marcar la posición
+            highlightedPositions.add(`${stringIndex}-${fret}`);
+            // Marcar la cuerda como usada
+            usedStrings.add(stringIndex);
+            // Dejar de buscar esta nota
+            break outerLoop;
           }
         }
-        
-        if (leftmostPosition) break; // Ya encontramos la posición más a la izquierda
-      }
-      
-      if (leftmostPosition) {
-        highlightedPositions.add(`${leftmostPosition.stringIndex}-${leftmostPosition.fret}`);
-        usedNotes.add(chordNote);
       }
     }
-    
+
     return highlightedPositions;
   };
 
