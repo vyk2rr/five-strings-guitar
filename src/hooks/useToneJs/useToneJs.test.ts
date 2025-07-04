@@ -82,7 +82,7 @@ describe('useToneJs', () => {
     await act(async () => {
       await result.current.playNote('C4', '8n');
     });
-    expect(result.current.synthRef.current).toBeDefined();
+    expect(result.current.synthRef.current).not.toBeNull();
     if (result.current.synthRef.current) {
       expect(result.current.synthRef.current.triggerAttackRelease).toHaveBeenCalledWith('C4', '8n', undefined, 0.7);
     }
@@ -97,8 +97,7 @@ describe('useToneJs', () => {
     await act(async () => {
       await result.current.playChord(chord, '4n');
     });
-
-    expect(result.current.synthRef.current).toBeDefined();
+    expect(result.current.synthRef.current).not.toBeNull();
     if (result.current.synthRef.current) {
       expect(result.current.synthRef.current.triggerAttackRelease).toHaveBeenCalledWith(chord, '4n', undefined, 0.7);
     }
