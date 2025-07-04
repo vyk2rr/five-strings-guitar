@@ -131,7 +131,7 @@ const PianoBase = forwardRef<PianoBaseHandle, PianoBaseProps>(({
     playChord
   }));
 
-  const isErrorNote = (note: string) => errorNotes.includes(note);
+  const isErrorNote = (note: tNoteWithOctave) => errorNotes.includes(note);
 
   return (
     <div className={`piano-base ${className || ''}`} data-testid="piano-base">
