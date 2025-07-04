@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import type { tChord } from '../PianoBase/PianoBase.types';
+import type { tChord, tNoteWithOctave } from '../PianoBase/PianoBase.types';
 
 interface FiveStringsGuitarProps {
   chord?: tChord;
-  // This callback will be called with notes that couldn't be placed on the guitar.
   onUnassignedNotes?: (notes: string[]) => void;
 }
+
+type tBestFit = {
+  note: tNoteWithOctave;
+  fret: number;
+};
 
 const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
   chord,
@@ -23,56 +27,59 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
 
   const chromaticNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-  const getNoteAtFret = (startNote: string, fret: number) => {
+  const getNoteAtFret = (startNote: string, fret: number): tNoteWithOctave => {
     const noteOnly = startNote.replace(/\d+/, '');
     const octave = parseInt(startNote.match(/\d+/)?.[0] || '4');
     const startIndex = chromaticNotes.indexOf(noteOnly);
     const totalSemitones = startIndex + fret;
     const newNoteIndex = totalSemitones % 12;
     const newOctave = octave + Math.floor(totalSemitones / 12);
-    return chromaticNotes[newNoteIndex] + newOctave;
+    return (chromaticNotes[newNoteIndex] + newOctave) as tNoteWithOctave;
   };
 
   useEffect(() => {
     const newHighlightedPositions = new Set<string>();
-    const usedStrings = new Set<number>();
-    const unassigned: string[] = [];
+    const unassignedNotes = new Set(chord ? [...new Set(chord)] : []);
+    const assignedNotes = new Set<string>();
 
     if (!chord || chord.length === 0) {
       setHighlightedPositions(new Set<string>());
-      onUnassignedNotes?.([]); // Report that there are no unassigned notes
+      onUnassignedNotes?.([]);
       return;
     }
 
-    // Use a copy of the chord to avoid potential mutation issues
-    const chordToProcess = [...chord];
+    for (let stringIndex = 0; stringIndex < strings.length; stringIndex++) {
+      let bestFit: tBestFit | null = null;
 
-    for (const chordNote of chordToProcess) {
-      let assigned = false;
-      outerLoop:
-      for (let fret = 0; fret < 14; fret++) {
-        for (let stringIndex = 0; stringIndex < strings.length; stringIndex++) {
-          if (usedStrings.has(stringIndex)) continue;
+      for (const chordNote of unassignedNotes) {
+        if (assignedNotes.has(chordNote)) continue;
 
+        for (let fret = 0; fret < 14; fret++) {
           const noteAtFret = getNoteAtFret(strings[stringIndex].startNote, fret);
           if (noteAtFret === chordNote) {
-            newHighlightedPositions.add(`${stringIndex}-${fret}`);
-            usedStrings.add(stringIndex);
-            assigned = true;
-            break outerLoop;
+            // If this is the first valid note found for this string,
+            // or if it's at a lower fret than the current best fit, update it.
+            if (!bestFit || fret < bestFit.fret) {
+              bestFit = { note: chordNote, fret: fret };
+            }
+            // Once we find the position for a note on a string, we don't need to check higher frets for it.
+            break;
           }
         }
       }
-      if (!assigned) {
-        unassigned.push(chordNote);
+
+      // If a best-fit note was found for this string after checking all unassigned notes, assign it.
+      if (bestFit) {
+        newHighlightedPositions.add(`${stringIndex}-${bestFit.fret}`);
+        assignedNotes.add(bestFit.note);
+        unassignedNotes.delete(bestFit.note);
       }
     }
 
     setHighlightedPositions(newHighlightedPositions);
-    // Call the callback with the list of unassigned notes
-    onUnassignedNotes?.(unassigned);
+    onUnassignedNotes?.(Array.from(unassignedNotes));
 
-  }, [chord, onUnassignedNotes]); // Add onUnassignedNotes to dependency array
+  }, [chord, onUnassignedNotes]);
 
   const stringHeight = 60;
   const fretWidth = 80;
