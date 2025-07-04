@@ -185,6 +185,7 @@ const PianoBase = forwardRef<PianoBaseHandle, PianoBaseProps>(({
                 >
                   {(group1 || group2 || errorHighlight) && (
                     <span className="note-name">
+                      <span>{noteString}</span>
                       <span className="flat-notation">{getAlternativeNotation(noteString)}</span>
                     </span>
                   )}
