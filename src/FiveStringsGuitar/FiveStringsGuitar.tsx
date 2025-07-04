@@ -1,81 +1,88 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import type { tChord } from '../PianoBase/PianoBase.types';
 
 interface FiveStringsGuitarProps {
-  chord?: string[];
+  chord?: tChord;
+  // This callback will be called with notes that couldn't be placed on the guitar.
+  onUnassignedNotes?: (notes: string[]) => void;
 }
 
-const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({ chord }) => {
-  // Definición de las cuerdas con sus notas de inicio y grosor
+const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
+  chord,
+  onUnassignedNotes,
+}) => {
+  const [highlightedPositions, setHighlightedPositions] = useState(new Set<string>());
+
   const strings = [
     { startNote: 'D4', thickness: 4, octave: 4 },
     { startNote: 'A4', thickness: 3, octave: 4 },
-    { startNote: 'E5', thickness: 2.5, octave: 5 }, 
+    { startNote: 'E5', thickness: 2.5, octave: 5 },
     { startNote: 'A5', thickness: 2, octave: 5 },
-    { startNote: 'D6', thickness: 1.5, octave: 6 } 
+    { startNote: 'D6', thickness: 1.5, octave: 6 }
   ];
 
-  // Notas cromáticas para calcular las notas de cada traste
   const chromaticNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-  // Función para obtener la nota en un traste específico
   const getNoteAtFret = (startNote: string, fret: number) => {
     const noteOnly = startNote.replace(/\d+/, '');
     const octave = parseInt(startNote.match(/\d+/)?.[0] || '4');
-    
     const startIndex = chromaticNotes.indexOf(noteOnly);
     const totalSemitones = startIndex + fret;
-    
     const newNoteIndex = totalSemitones % 12;
     const newOctave = octave + Math.floor(totalSemitones / 12);
-    
     return chromaticNotes[newNoteIndex] + newOctave;
   };
 
-  // Calcular qué posiciones deben ser resaltadas (solo la aparición más a la izquierda de cada nota)
-  const getHighlightedPositions = () => {
-    const highlightedPositions = new Set<string>();
-    const usedStrings = new Set<number>(); // Para no permitir más de una nota por cuerda
+  useEffect(() => {
+    const newHighlightedPositions = new Set<string>();
+    const usedStrings = new Set<number>();
+    const unassigned: string[] = [];
 
-    if (!chord || chord.length === 0) return highlightedPositions;
+    if (!chord || chord.length === 0) {
+      setHighlightedPositions(new Set<string>());
+      onUnassignedNotes?.([]); // Report that there are no unassigned notes
+      return;
+    }
 
-    // Para cada nota del acorde, buscar su posición más a la izquierda en cuerdas disponibles
-    for (const chordNote of chord) {
-      // Explorar cada traste
+    // Use a copy of the chord to avoid potential mutation issues
+    const chordToProcess = [...chord];
+
+    for (const chordNote of chordToProcess) {
+      let assigned = false;
       outerLoop:
       for (let fret = 0; fret < 14; fret++) {
-        // Explorar cuerdas en orden
         for (let stringIndex = 0; stringIndex < strings.length; stringIndex++) {
-          // Si esta cuerda ya se usó, continuar con la siguiente
           if (usedStrings.has(stringIndex)) continue;
 
           const noteAtFret = getNoteAtFret(strings[stringIndex].startNote, fret);
           if (noteAtFret === chordNote) {
-            // Marcar la posición
-            highlightedPositions.add(`${stringIndex}-${fret}`);
-            // Marcar la cuerda como usada
+            newHighlightedPositions.add(`${stringIndex}-${fret}`);
             usedStrings.add(stringIndex);
-            // Dejar de buscar esta nota
+            assigned = true;
             break outerLoop;
           }
         }
       }
+      if (!assigned) {
+        unassigned.push(chordNote);
+      }
     }
 
-    return highlightedPositions;
-  };
+    setHighlightedPositions(newHighlightedPositions);
+    // Call the callback with the list of unassigned notes
+    onUnassignedNotes?.(unassigned);
 
-  const highlightedPositions = getHighlightedPositions();
+  }, [chord, onUnassignedNotes]); // Add onUnassignedNotes to dependency array
 
-  const stringHeight = 60; // Altura de cada cuerda
-  const fretWidth = 80; // Ancho de cada traste
-  const totalWidth = fretWidth * 14; // 14 trastes
-  const totalHeight = stringHeight * 5; // 5 cuerdas
+  const stringHeight = 60;
+  const fretWidth = 80;
+  const totalWidth = fretWidth * 14;
+  const totalHeight = stringHeight * 5;
 
   return (
     <svg width={totalWidth} height={totalHeight}>
       {strings.map((string, stringIndex) => (
         <g key={stringIndex}>
-          {/* Dibujar la cuerda */}
           <line
             x1={0}
             y1={stringIndex * stringHeight + stringHeight / 2}
@@ -84,17 +91,14 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({ chord }) => {
             stroke="black"
             strokeWidth={string.thickness}
           />
-          
-          {/* Dibujar los trastes y círculos con notas */}
           {Array.from({ length: 14 }, (_, fret) => {
             const note = getNoteAtFret(string.startNote, fret);
             const isHighlighted = highlightedPositions.has(`${stringIndex}-${fret}`);
             const x = fret * fretWidth + fretWidth / 2;
             const y = stringIndex * stringHeight + stringHeight / 2;
-            
+
             return (
               <g key={fret}>
-                {/* Círculo */}
                 <circle
                   cx={x}
                   cy={y}
@@ -103,8 +107,6 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({ chord }) => {
                   stroke="black"
                   strokeWidth={1}
                 />
-                
-                {/* Texto con la nota */}
                 <text
                   x={x}
                   y={y}

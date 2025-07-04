@@ -152,3 +152,11 @@
 }
 
 .flat-notation {}
+
+/* To highlight error notes in red, in PianoBase.css */
+.error-highlight {
+  background-color: #f88 !important;
+}
+.note-error {
+  color: white; /* or black, whichever is more legible */
+}
