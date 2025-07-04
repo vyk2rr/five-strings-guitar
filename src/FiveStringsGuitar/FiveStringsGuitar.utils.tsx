@@ -34,5 +34,6 @@ export function spreadVoicing(chord: tChord): tChord {
     ];
   }
   // Si el acorde tiene otra cantidad de notas, o no es lo esperado, se puede retornar tal cual:
+  console.warn(`spreadVoicing: Unsupported chord size (${chord.length}). Returning the chord unchanged.`);
   return chord;
 }
