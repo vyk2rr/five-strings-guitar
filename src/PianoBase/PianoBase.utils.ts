@@ -57,6 +57,8 @@ export function getBlackKeyLeft(note: tNoteWithOctave, whiteNotes: tNoteWithOcta
 
   const match = note.match(/^([A-G]#)(\d)$/);
   if (!match) return "0%";
+  
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, pitchClass, octave] = match;
   const whiteBefore = `${blackToWhiteBefore[pitchClass as tNoteName]}${octave}` as tNoteWithOctave;
   const whiteIndex = whiteNotes.indexOf(whiteBefore); // falta la octava en whiteBefore

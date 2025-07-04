@@ -2,6 +2,7 @@ import '@testing-library/jest-dom';
 
 // Extend Jest matchers
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
       toBeInTheDocument(): R;
@@ -52,5 +53,7 @@ global.AudioContext = jest.fn().mockImplementation(() => ({
 }));
 
 // Mock window.AudioContext
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).AudioContext = global.AudioContext;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).webkitAudioContext = global.AudioContext;

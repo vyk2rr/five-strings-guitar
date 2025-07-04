@@ -48,6 +48,7 @@ describe('PianoBase', () => {
       playNote: jest.fn(),
       playChord: jest.fn(),
       playArpeggio: jest.fn(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       durationToMs: jest.fn((duration: any) => (typeof duration === 'number' ? duration : 250)),
       setBpm: jest.fn(),
       cancelScheduledEvents: jest.fn(),
@@ -258,6 +259,49 @@ describe('PianoBase', () => {
       expect(e4Key).toHaveClass('highlight-group-1');
       expect(g4Key).not.toHaveClass('active-key');
       expect(g4Key).not.toHaveClass('highlight-group-1');
+    });
+  });
+
+  describe('Error Highlighting', () => {
+    it('applies the error-highlight class to notes in the errorNotes prop', () => {
+      const errorNotes: tNoteWithOctave[] = ['C4', 'F#5'];
+      render(<PianoBase errorNotes={errorNotes} />);
+      
+      const piano = screen.getByTestId('piano-base');
+      const c4Key = piano.querySelector('[data-note="C4"]');
+      const fSharp5Key = piano.querySelector('[data-note="F#5"]');
+      const d4Key = piano.querySelector('[data-note="D4"]');
+
+      expect(c4Key).toHaveClass('error-highlight');
+      expect(fSharp5Key).toHaveClass('error-highlight');
+      expect(d4Key).not.toHaveClass('error-highlight');
+    });
+
+    it('error-highlight should have priority over other highlights', () => {
+      const errorNotes: tNoteWithOctave[] = ['E4'];
+      const regularHighlight: tNoteWithOctave[] = ['E4', 'G4'];
+      
+      // Mock que E4 está "clicado"
+      (mockHighlightFns.isNoteClicked as jest.Mock).mockImplementation((note: tNoteWithOctave) => note === 'E4');
+      // Mock que las notas en `regularHighlight` están en el grupo 1
+      (mockHighlightFns.isNoteInGroup as jest.Mock).mockImplementation(
+        (note: tNoteWithOctave, group: number) => regularHighlight.includes(note) && group === 0
+      );
+
+      render(<PianoBase errorNotes={errorNotes} highlightOnThePiano={regularHighlight} />);
+      
+      const piano = screen.getByTestId('piano-base');
+      const e4Key = piano.querySelector('[data-note="E4"]');
+      const g4Key = piano.querySelector('[data-note="G4"]');
+
+      // E4 debería tener SOLO error-highlight, ninguna otra clase de resaltado
+      expect(e4Key).toHaveClass('error-highlight');
+      expect(e4Key).not.toHaveClass('highlight-group-1');
+      expect(e4Key).not.toHaveClass('active-key');
+
+      // G4 debería tener su resaltado normal
+      expect(g4Key).toHaveClass('highlight-group-1');
+      expect(g4Key).not.toHaveClass('error-highlight');
     });
   });
 });
