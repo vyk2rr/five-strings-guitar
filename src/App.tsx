@@ -98,7 +98,7 @@ function App() {
                   chordItem.quality,
                   chordItem.chord
                 ),
-                transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+                transform: isSelected ? 'scale(1.2)' : 'scale(1)',
                 transition: 'transform 0.2s ease',
                 border: isSelected ? '2px solid black' : '1px solid grey',
                 fontWeight: isSelected ? 'bold' : 'normal',
