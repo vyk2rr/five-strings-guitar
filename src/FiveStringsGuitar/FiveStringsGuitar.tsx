@@ -21,6 +21,26 @@ const strings = [
 
 const chromaticNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
+const noteColors: { [key: string]: string } = {
+  'C': '#ff9999', // Pastel Red
+  'C#': '#ffb399',
+  'D': '#ffc999', // Pastel Orange
+  'D#': '#ffdd99',
+  'E': '#ffff99', // Pastel Yellow
+  'F': '#d4ff99',
+  'F#': '#b3ff99', // Pastel Green
+  'G': '#99ff99',
+  'G#': '#99ffb3',
+  'A': '#99ffff', // Pastel Cyan
+  'A#': '#99ddff',
+  'B': '#99b3ff', // Pastel Blue
+};
+
+const getNoteColor = (note: string): string => {
+  const noteName = note.replace(/\d+/, ''); 
+  return noteColors[noteName] || '#ffffff'; 
+};
+
 const getNoteAtFret = (startNote: string, fret: number): tNoteWithOctave => {
   const noteOnly = startNote.replace(/\d+/, '');
   const octave = parseInt(startNote.match(/\d+/)?.[0] || '4');
@@ -83,43 +103,86 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
 
   const stringHeight = 60;
   const fretWidth = 80;
+  const topMargin = 20; // Espacio para los inlays
   const totalWidth = fretWidth * 14;
-  const totalHeight = stringHeight * 5;
+  const totalHeight = stringHeight * 5 + topMargin;
 
   return (
     <svg width={totalWidth} height={totalHeight}>
+      {/* Dibuja las cuerdas */}
       {strings.map((string, stringIndex) => (
-        <g key={stringIndex}>
+        <g key={`string-${stringIndex}`}>
           <line
+            data-testid="string-line"
             x1={0}
-            y1={stringIndex * stringHeight + stringHeight / 2}
+            y1={stringIndex * stringHeight + stringHeight / 2 + topMargin}
             x2={totalWidth}
-            y2={stringIndex * stringHeight + stringHeight / 2}
+            y2={stringIndex * stringHeight + stringHeight / 2 + topMargin}
             stroke="black"
             strokeWidth={string.thickness}
           />
+        </g>
+      ))}
+
+      {/* Dibuja la línea del traste vertical entre D4 y D#4 (en el primer traste) */}
+      <line
+        data-testid="fret-line"
+        x1={fretWidth}
+        y1={topMargin}
+        x2={fretWidth}
+        y2={totalHeight}
+        stroke="black"
+        strokeWidth="1"
+      />
+
+      {/* Dibuja los puntos de referencia del mástil (inlays) en el borde superior */}
+      {[3, 5, 7, 9, 12].map(fret => (
+        <circle
+          key={`inlay-${fret}`}
+          cx={fret * fretWidth + fretWidth / 2}
+          cy={topMargin / 2}
+          r={fret === 12 ? 6 : 5} // Un poco más pequeño para el borde
+          fill="#000"
+        />
+      ))}
+      {/* Punto adicional para el traste 12 */}
+      <circle
+        key="inlay-12-extra"
+        cx={12 * fretWidth + fretWidth / 2}
+        cy={topMargin / 2 + 15} // Este no es necesario, pero lo dejo por si quieres un doble punto vertical
+        r={6}
+        fill="#cccccc"
+        visibility="hidden" // Oculto por defecto, puedes cambiarlo
+      />
+
+
+      {/* Dibuja los marcadores de nota (círculos) */}
+      {strings.map((string, stringIndex) => (
+        <g key={`notes-${stringIndex}`}>
           {Array.from({ length: 14 }, (_, fret) => {
             const note = getNoteAtFret(string.startNote, fret);
             const isHighlighted = highlightedPositions.has(`${stringIndex}-${fret}`);
             const x = fret * fretWidth + fretWidth / 2;
-            const y = stringIndex * stringHeight + stringHeight / 2;
+            const y = stringIndex * stringHeight + stringHeight / 2 + topMargin;
+            const noteColor = getNoteColor(note);
 
             return (
-              <g key={fret}>
+              <g key={fret} data-testid={`note-marker-${stringIndex}-${fret}-${note}`}>
+                {/* Círculo de fondo para el "outline" de color */}
                 <circle
                   cx={x}
                   cy={y}
-                  r={15}
-                  fill={isHighlighted ? 'yellow' : 'white'}
+                  r={isHighlighted ? 25 : 16}
+                  fill={isHighlighted ? noteColor : 'white'}
                   stroke="black"
-                  strokeWidth={1}
+                  strokeWidth={isHighlighted ? 2 : 1}
                 />
                 <text
                   x={x}
                   y={y}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fontSize="10"
+                  fontSize={isHighlighted ? "17" : "14"}
                   fill="black"
                   fontFamily="Arial, sans-serif"
                 >
