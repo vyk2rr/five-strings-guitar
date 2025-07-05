@@ -98,8 +98,9 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
 
   const stringHeight = 60;
   const fretWidth = 80;
+  const topMargin = 20; // Espacio para los inlays
   const totalWidth = fretWidth * 14;
-  const totalHeight = stringHeight * 5;
+  const totalHeight = stringHeight * 5 + topMargin;
 
   return (
     <svg width={totalWidth} height={totalHeight}>
@@ -107,10 +108,11 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
       {strings.map((string, stringIndex) => (
         <g key={`string-${stringIndex}`}>
           <line
+            data-testid="string-line"
             x1={0}
-            y1={stringIndex * stringHeight + stringHeight / 2}
+            y1={stringIndex * stringHeight + stringHeight / 2 + topMargin}
             x2={totalWidth}
-            y2={stringIndex * stringHeight + stringHeight / 2}
+            y2={stringIndex * stringHeight + stringHeight / 2 + topMargin}
             stroke="black"
             strokeWidth={string.thickness}
           />
@@ -119,38 +121,33 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
 
       {/* Dibuja la línea del traste vertical entre D4 y D#4 (en el primer traste) */}
       <line
+        data-testid="fret-line"
         x1={fretWidth}
-        y1={0}
+        y1={topMargin}
         x2={fretWidth}
         y2={totalHeight}
         stroke="black"
         strokeWidth="1"
       />
 
-      {/* Dibuja los puntos de referencia del mástil (inlays) */}
-      {[3, 5, 7, 9].map(fret => (
+      {/* Dibuja los puntos de referencia del mástil (inlays) en el borde superior */}
+      {[3, 5, 7, 9, 12].map(fret => (
         <circle
           key={`inlay-${fret}`}
           cx={fret * fretWidth + fretWidth / 2}
-          cy={totalHeight / 2}
-          r={8}
-          fill="#cccccc"
+          cy={topMargin / 2}
+          r={fret === 12 ? 6 : 5} // Un poco más pequeño para el borde
+          fill="#000"
         />
       ))}
-      {/* Doble punto en el traste 12 */}
+      {/* Punto adicional para el traste 12 */}
       <circle
-        key="inlay-12-1"
+        key="inlay-12-extra"
         cx={12 * fretWidth + fretWidth / 2}
-        cy={stringHeight * 1.5}
-        r={8}
+        cy={topMargin / 2 + 15} // Este no es necesario, pero lo dejo por si quieres un doble punto vertical
+        r={6}
         fill="#cccccc"
-      />
-      <circle
-        key="inlay-12-2"
-        cx={12 * fretWidth + fretWidth / 2}
-        cy={stringHeight * 3.5}
-        r={8}
-        fill="#cccccc"
+        visibility="hidden" // Oculto por defecto, puedes cambiarlo
       />
 
 
@@ -161,18 +158,19 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
             const note = getNoteAtFret(string.startNote, fret);
             const isHighlighted = highlightedPositions.has(`${stringIndex}-${fret}`);
             const x = fret * fretWidth + fretWidth / 2;
-            const y = stringIndex * stringHeight + stringHeight / 2;
+            const y = stringIndex * stringHeight + stringHeight / 2 + topMargin;
             const noteColor = getNoteColor(note);
 
             return (
-              <g key={fret}>
+              <g key={fret} data-testid={`note-marker-${note}`}>
+                {/* Círculo de fondo para el "outline" de color */}
                 <circle
                   cx={x}
                   cy={y}
                   r={isHighlighted ? 25 : 16}
                   fill={isHighlighted ? noteColor : 'white'}
                   stroke="black"
-                  strokeWidth={isHighlighted ? 2 : 1} 
+                  strokeWidth={isHighlighted ? 2 : 1}
                 />
                 <text
                   x={x}
