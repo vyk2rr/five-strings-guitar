@@ -21,19 +21,24 @@ const strings = [
 
 const chromaticNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-const NOTE_COLORS: { [key: string]: string } = {
+const noteColors: { [key: string]: string } = {
   'C': '#ff9999', // Pastel Red
+  'C#': '#ffb399',
   'D': '#ffc999', // Pastel Orange
+  'D#': '#ffdd99',
   'E': '#ffff99', // Pastel Yellow
-  'F': '#99ff99', // Pastel Green
-  'G': '#99ccff', // Pastel Blue
-  'A': '#9999ff', // Pastel Indigo
-  'B': '#cc99ff'  // Pastel Violet
+  'F': '#d4ff99',
+  'F#': '#b3ff99', // Pastel Green
+  'G': '#99ff99',
+  'G#': '#99ffb3',
+  'A': '#99ffff', // Pastel Cyan
+  'A#': '#99ddff',
+  'B': '#99b3ff', // Pastel Blue
 };
 
-const getNoteColor = (note: tNoteWithOctave): string => {
-  const noteName = note.charAt(0);
-  return NOTE_COLORS[noteName] || 'black';
+const getNoteColor = (note: string): string => {
+  const noteName = note.replace(/\d+/, ''); 
+  return noteColors[noteName] || '#ffffff'; 
 };
 
 const getNoteAtFret = (startNote: string, fret: number): tNoteWithOctave => {
@@ -162,7 +167,7 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
             const noteColor = getNoteColor(note);
 
             return (
-              <g key={fret} data-testid={`note-marker-${note}`}>
+              <g key={fret} data-testid={`note-marker-${stringIndex}-${fret}-${note}`}>
                 {/* Círculo de fondo para el "outline" de color */}
                 <circle
                   cx={x}

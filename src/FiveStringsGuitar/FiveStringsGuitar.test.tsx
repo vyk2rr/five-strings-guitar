@@ -78,11 +78,12 @@ describe('FiveStringsGuitar', () => {
         expect(highlightedCircles.length).toBe(2);
 
         // Verificamos que los círculos resaltados tengan el color pastel correcto
-        const d4Circle = document.querySelector('g[data-testid="note-marker-D4"] circle[r="25"]');
-        const a4Circle = document.querySelector('g[data-testid="note-marker-A4"] circle[r="25"]');
+        // FIX: Use attribute "ends with" selector due to the new unique data-testid format.
+        const d4Circle = document.querySelector('g[data-testid$="-D4"] circle[r="25"]');
+        const a4Circle = document.querySelector('g[data-testid$="-A4"] circle[r="25"]');
 
         expect(d4Circle).toHaveAttribute('fill', '#ffc999'); // Pastel Orange for D
-        expect(a4Circle).toHaveAttribute('fill', '#9999ff'); // Pastel Indigo for A
+        expect(a4Circle).toHaveAttribute('fill', '#99ffff'); // Pastel Cyan for A
       });
     });
   });
