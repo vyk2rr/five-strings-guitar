@@ -60,7 +60,7 @@ function App() {
         <h1>
           {selectedChordInfo.name} — (
           {voicedChord.map((note, index) => (
-            <span key={note}>
+            <span key={`${note}-${index}`}>
               {unassignedNotes.includes(note) ? (
                 <s style={{ color: 'red' }}>{note}</s>
               ) : (

@@ -49,6 +49,30 @@ describe('App Integration Tests', () => {
         expect(dMajButton).toHaveClass('selected');
       });
     });
+
+    it('renders chord names with duplicate notes without React key warnings', async () => {
+      // Espiamos console.error para detectar advertencias de React
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      render(<App />);
+
+      // Seleccionamos un acorde que probablemente tenga notas repetidas en su voicing
+      const dMajButton = screen.getByRole('button', { name: /^Dmaj$/i });
+      fireEvent.click(dMajButton);
+
+      // Esperamos a que el título del acorde se renderice
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Dmaj/i })).toBeInTheDocument();
+      });
+
+      // Verificamos que no se haya llamado a console.error con la advertencia de keys duplicadas
+      expect(consoleErrorSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('Each child in a list should have a unique "key" prop')
+      );
+
+      // Restauramos el espía para no afectar a otras pruebas
+      consoleErrorSpy.mockRestore();
+    });
   });
 
   // --- Tests de Interacción con el Dropdown de Nota Raíz ---
