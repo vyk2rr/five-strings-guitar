@@ -109,6 +109,24 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
 
   return (
     <svg width={totalWidth} height={totalHeight}>
+      {/* Líneas de contorno superior e inferior */}
+      <line
+        x1={0}
+        y1={topMargin}
+        x2={totalWidth}
+        y2={topMargin}
+        stroke="black"
+        strokeWidth="2"
+      />
+      <line
+        x1={0}
+        y1={totalHeight}
+        x2={totalWidth}
+        y2={totalHeight}
+        stroke="black"
+        strokeWidth="2"
+      />
+
       {/* Dibuja las cuerdas */}
       {strings.map((string, stringIndex) => (
         <g key={`string-${stringIndex}`}>
@@ -124,35 +142,48 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
         </g>
       ))}
 
-      {/* Dibuja la línea del traste vertical entre D4 y D#4 (en el primer traste) */}
-      <line
-        data-testid="fret-line"
-        x1={fretWidth}
-        y1={topMargin}
-        x2={fretWidth}
-        y2={totalHeight}
-        stroke="black"
-        strokeWidth="1"
-      />
+      {/* Dibuja las líneas de los trastes */}
+      {Array.from({ length: 14 }, (_, i) => {
+        // La primera línea (cejuela) es más gruesa
+        const isNut = i === 0;
+        return (
+          <line
+            key={`fret-line-${i}`}
+            data-testid={isNut ? 'fret-line' : `fret-line-${i}`}
+            x1={(i + 1) * fretWidth}
+            y1={topMargin}
+            x2={(i + 1) * fretWidth}
+            y2={totalHeight}
+            stroke="black"
+            strokeWidth={isNut ? 10 : 1}
+          />
+        );
+      })}
 
       {/* Dibuja los puntos de referencia del mástil (inlays) en el borde superior */}
-      {[3, 5, 7, 9, 12].map(fret => (
+      {[3, 5, 7, 9].map(fret => (
         <circle
           key={`inlay-${fret}`}
           cx={fret * fretWidth + fretWidth / 2}
           cy={topMargin / 2}
-          r={fret === 12 ? 6 : 5} // Un poco más pequeño para el borde
+          r={5}
           fill="#000"
         />
       ))}
-      {/* Punto adicional para el traste 12 */}
+      {/* Puntos dobles para el traste 12 */}
       <circle
-        key="inlay-12-extra"
-        cx={12 * fretWidth + fretWidth / 2}
-        cy={topMargin / 2 + 15} // Este no es necesario, pero lo dejo por si quieres un doble punto vertical
+        key="inlay-12-1"
+        cx={12 * fretWidth + fretWidth * (3/8)}
+        cy={topMargin / 2}
         r={6}
-        fill="#cccccc"
-        visibility="hidden" // Oculto por defecto, puedes cambiarlo
+        fill="#000"
+      />
+      <circle
+        key="inlay-12-2"
+        cx={12 * fretWidth + fretWidth * (5/8)}
+        cy={topMargin / 2}
+        r={6}
+        fill="#000"
       />
 
 
