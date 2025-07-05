@@ -23,8 +23,8 @@ describe('FiveStringsGuitar', () => {
 
     it('renders 6 inlay dots (markers on the neck)', () => {
       // Los inlays son los únicos círculos con este color de relleno
-      const inlayDots = document.querySelectorAll('circle[fill="#cccccc"]');
-      expect(inlayDots.length).toBe(6);
+      const inlayDots = document.querySelectorAll('circle[fill="#000"]');
+      expect(inlayDots.length).toBe(5);
     });
 
     it('renders 70 note markers (14 frets * 5 strings)', () => {

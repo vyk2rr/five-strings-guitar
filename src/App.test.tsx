@@ -46,7 +46,8 @@ describe('App Integration Tests', () => {
       await waitFor(() => {
         const title = screen.getByRole('heading', { name: /Dmaj/i });
         expect(title).toBeInTheDocument();
-        expect(dMajButton).toHaveStyle('transform: scale(1.1)');
+        // FIX: The component now scales the button to 1.2, not 1.1
+        expect(dMajButton).toHaveStyle('transform: scale(1.2)');
       });
     });
   });
