@@ -105,29 +105,29 @@ describe('App Integration Tests', () => {
 
   // --- Tests para el botón de Inversiones ---
   describe('Inversions Toggle Button', () => {
-    it('should toggle the visibility of chord inversions', async () => {
+    it('should toggle the visibility of chord inversions, starting with them hidden', async () => {
       render(<App />);
 
       const toggleButton = screen.getByRole('button', { name: /inversiones/i });
 
-      // 1. Estado inicial: Las inversiones se muestran
-      expect(toggleButton).toHaveTextContent('Ocultar Inversiones');
-      expect(screen.getByRole('button', { name: /Dmaj \(1ª\)/i })).toBeInTheDocument();
+      // 1. Estado inicial: Las inversiones están ocultas por defecto.
+      expect(toggleButton).toHaveTextContent('Mostrar Inversiones');
+      expect(screen.queryByRole('button', { name: /Dmaj \(1ª\)/i })).not.toBeInTheDocument();
 
-      // 2. Ocultar inversiones
+      // 2. Mostrar inversiones
       fireEvent.click(toggleButton);
       
       await waitFor(() => {
-        expect(toggleButton).toHaveTextContent('Mostrar Inversiones');
-        expect(screen.queryByRole('button', { name: /Dmaj \(1ª\)/i })).not.toBeInTheDocument();
+        expect(toggleButton).toHaveTextContent('Ocultar Inversiones');
+        expect(screen.getByRole('button', { name: /Dmaj \(1ª\)/i })).toBeInTheDocument();
       });
 
-      // 3. Mostrar inversiones de nuevo
+      // 3. Ocultar inversiones de nuevo
       fireEvent.click(toggleButton);
 
       await waitFor(() => {
-        expect(toggleButton).toHaveTextContent('Ocultar Inversiones');
-        expect(screen.getByRole('button', { name: /Dmaj \(1ª\)/i })).toBeInTheDocument();
+        expect(toggleButton).toHaveTextContent('Mostrar Inversiones');
+        expect(screen.queryByRole('button', { name: /Dmaj \(1ª\)/i })).not.toBeInTheDocument();
       });
     });
   });
