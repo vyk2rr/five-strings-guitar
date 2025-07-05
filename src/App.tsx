@@ -9,7 +9,7 @@ const ALL_NOTES: tNoteName[] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#',
 
 function App() {
   const [note, setNote] = useState<tNoteName>("D");
-  const [showInversions, setShowInversions] = useState(true);
+  const [showInversions, setShowInversions] = useState(false);
   const octave = 4;
   
   const chords = useMemo(() => {
