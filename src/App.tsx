@@ -62,7 +62,7 @@ function App() {
           {voicedChord.map((note, index) => (
             <span key={`${note}-${index}`}>
               {unassignedNotes.includes(note) ? (
-                <s style={{ color: 'red' }}>{note}</s>
+                <span className="unassigned-note">{note}</span>
               ) : (
                 note
               )}

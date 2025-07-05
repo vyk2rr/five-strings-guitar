@@ -65,3 +65,9 @@
   border: 2px solid black;
   font-weight: bold;
 }
+
+/* Estilo para las notas no asignadas en el título */
+.unassigned-note {
+  color: red;
+  text-decoration: line-through;
+}
