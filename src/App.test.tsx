@@ -34,21 +34,44 @@ describe('App Integration Tests', () => {
       });
     });
 
-    it('displays the selected chord name and scales up the button on click', async () => {
+    it('displays the selected chord name and applies the selected class to the button on click', async () => {
       render(<App />);
-      // FIX: Use a specific regex for the button.
       const dMajButton = screen.getByRole('button', { name: /^Dmaj$/i });
 
       expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+      expect(dMajButton).not.toHaveClass('selected');
 
       fireEvent.click(dMajButton);
 
       await waitFor(() => {
         const title = screen.getByRole('heading', { name: /Dmaj/i });
         expect(title).toBeInTheDocument();
-        // FIX: The component now scales the button to 1.2, not 1.1
-        expect(dMajButton).toHaveStyle('transform: scale(1.2)');
+        expect(dMajButton).toHaveClass('selected');
       });
+    });
+
+    it('renders chord names with duplicate notes without React key warnings', async () => {
+      // Espiamos console.error para detectar advertencias de React
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      render(<App />);
+
+      // Seleccionamos un acorde que probablemente tenga notas repetidas en su voicing
+      const dMajButton = screen.getByRole('button', { name: /^Dmaj$/i });
+      fireEvent.click(dMajButton);
+
+      // Esperamos a que el título del acorde se renderice
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Dmaj/i })).toBeInTheDocument();
+      });
+
+      // Verificamos que no se haya llamado a console.error con la advertencia de keys duplicadas
+      expect(consoleErrorSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('Each child in a list should have a unique "key" prop')
+      );
+
+      // Restauramos el espía para no afectar a otras pruebas
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -76,6 +99,35 @@ describe('App Integration Tests', () => {
         expect(screen.queryByRole('button', { name: /^Dmaj$/i })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /^Emaj$/i })).toBeInTheDocument();
         expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  // --- Tests para el botón de Inversiones ---
+  describe('Inversions Toggle Button', () => {
+    it('should toggle the visibility of chord inversions', async () => {
+      render(<App />);
+
+      const toggleButton = screen.getByRole('button', { name: /inversiones/i });
+
+      // 1. Estado inicial: Las inversiones se muestran
+      expect(toggleButton).toHaveTextContent('Ocultar Inversiones');
+      expect(screen.getByRole('button', { name: /Dmaj \(1ª\)/i })).toBeInTheDocument();
+
+      // 2. Ocultar inversiones
+      fireEvent.click(toggleButton);
+      
+      await waitFor(() => {
+        expect(toggleButton).toHaveTextContent('Mostrar Inversiones');
+        expect(screen.queryByRole('button', { name: /Dmaj \(1ª\)/i })).not.toBeInTheDocument();
+      });
+
+      // 3. Mostrar inversiones de nuevo
+      fireEvent.click(toggleButton);
+
+      await waitFor(() => {
+        expect(toggleButton).toHaveTextContent('Ocultar Inversiones');
+        expect(screen.getByRole('button', { name: /Dmaj \(1ª\)/i })).toBeInTheDocument();
       });
     });
   });

@@ -1,9 +1,8 @@
-import { render, waitFor, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import FiveStringsGuitar from './FiveStringsGuitar';
 import type { tChord } from '../PianoBase/PianoBase.types';
 
 describe('FiveStringsGuitar', () => {
-
   // --- Tests de Renderizado Visual Estático ---
   describe('Static Visual Rendering', () => {
     beforeEach(() => {
@@ -11,24 +10,30 @@ describe('FiveStringsGuitar', () => {
     });
 
     it('renders 5 horizontal string lines', () => {
-      // Seleccionamos las líneas de las cuerdas por su data-testid
       const stringLines = screen.getAllByTestId('string-line');
       expect(stringLines.length).toBe(5);
     });
 
-    it('renders 1 vertical fret line', () => {
-      const fretLine = screen.getByTestId('fret-line');
-      expect(fretLine).toBeInTheDocument();
+    it('renders 14 vertical fret lines, with the first one being thicker', () => {
+      // Buscamos todas las líneas de trastes usando una expresión regular
+      const fretLines = screen.getAllByTestId(/^fret-line/);
+      expect(fretLines.length).toBe(14);
+
+      // La primera línea (cejuela) debe tener el test-id 'fret-line' y ser más gruesa
+      const nutLine = screen.getByTestId('fret-line');
+      expect(nutLine).toHaveAttribute('stroke-width', '10');
+
+      // Verificamos que otra línea (ej. la segunda) tenga el grosor normal
+      const secondFretLine = screen.getByTestId('fret-line-1');
+      expect(secondFretLine).toHaveAttribute('stroke-width', '1');
     });
 
     it('renders 6 inlay dots (markers on the neck)', () => {
-      // Los inlays son los únicos círculos con este color de relleno
       const inlayDots = document.querySelectorAll('circle[fill="#000"]');
-      expect(inlayDots.length).toBe(5);
+      expect(inlayDots.length).toBe(6);
     });
 
     it('renders 70 note markers (14 frets * 5 strings)', () => {
-      // FIX: Use a regex to find all test IDs that start with "note-marker-"
       const noteMarkers = screen.getAllByTestId(/^note-marker-/);
       expect(noteMarkers.length).toBe(14 * 5);
     });

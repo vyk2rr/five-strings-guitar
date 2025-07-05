@@ -2,3 +2,72 @@
   padding: 7px;
   border-radius: 10px;
 }
+
+/* Contenedor para los controles (selector de nota, botón de inversiones) */
+.controls-container {
+  margin: 20px 0;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Etiqueta para el selector de nota raíz */
+.root-note-label {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+/* Selector de nota (dropdown) */
+.note-selector {
+  padding: 8px;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* Botón para mostrar/ocultar inversiones */
+.toggle-inversions-button {
+  padding: 8px 12px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  margin-left: 15px;
+  transition: background-color 0.2s ease;
+}
+
+/* Estilos condicionales para el botón de inversiones */
+.toggle-inversions-button[data-inversions-shown="true"] {
+  background-color: #f0f0f0;
+}
+
+.toggle-inversions-button[data-inversions-shown="false"] {
+  background-color: #d0eada;
+}
+
+/* Estilo base para cada botón de acorde */
+.chord-button {
+  /* Usamos una variable CSS para el fondo dinámico */
+  background: var(--chord-bg, #eee);
+  transform: scale(1);
+  transition: transform 0.2s ease;
+  border: 1px solid grey;
+  font-weight: normal;
+  padding: 8px 16px;
+  margin: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Estilo para el botón de acorde cuando está seleccionado */
+.chord-button.selected {
+  transform: scale(1.2);
+  border: 2px solid black;
+  font-weight: bold;
+}
+
+/* Estilo para las notas no asignadas en el título */
+.unassigned-note {
+  color: red;
+  text-decoration: line-through;
+}
