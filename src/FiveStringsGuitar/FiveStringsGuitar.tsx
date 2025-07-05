@@ -21,6 +21,21 @@ const strings = [
 
 const chromaticNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
+const NOTE_COLORS: { [key: string]: string } = {
+  'C': '#ff9999', // Pastel Red
+  'D': '#ffc999', // Pastel Orange
+  'E': '#ffff99', // Pastel Yellow
+  'F': '#99ff99', // Pastel Green
+  'G': '#99ccff', // Pastel Blue
+  'A': '#9999ff', // Pastel Indigo
+  'B': '#cc99ff'  // Pastel Violet
+};
+
+const getNoteColor = (note: tNoteWithOctave): string => {
+  const noteName = note.charAt(0);
+  return NOTE_COLORS[noteName] || 'black';
+};
+
 const getNoteAtFret = (startNote: string, fret: number): tNoteWithOctave => {
   const noteOnly = startNote.replace(/\d+/, '');
   const octave = parseInt(startNote.match(/\d+/)?.[0] || '4');
@@ -88,8 +103,9 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
 
   return (
     <svg width={totalWidth} height={totalHeight}>
+      {/* Dibuja las cuerdas */}
       {strings.map((string, stringIndex) => (
-        <g key={stringIndex}>
+        <g key={`string-${stringIndex}`}>
           <line
             x1={0}
             y1={stringIndex * stringHeight + stringHeight / 2}
@@ -98,28 +114,72 @@ const FiveStringsGuitar: React.FC<FiveStringsGuitarProps> = ({
             stroke="black"
             strokeWidth={string.thickness}
           />
+        </g>
+      ))}
+
+      {/* Dibuja la línea del traste vertical entre D4 y D#4 (en el primer traste) */}
+      <line
+        x1={fretWidth}
+        y1={0}
+        x2={fretWidth}
+        y2={totalHeight}
+        stroke="black"
+        strokeWidth="1"
+      />
+
+      {/* Dibuja los puntos de referencia del mástil (inlays) */}
+      {[3, 5, 7, 9].map(fret => (
+        <circle
+          key={`inlay-${fret}`}
+          cx={fret * fretWidth + fretWidth / 2}
+          cy={totalHeight / 2}
+          r={8}
+          fill="#cccccc"
+        />
+      ))}
+      {/* Doble punto en el traste 12 */}
+      <circle
+        key="inlay-12-1"
+        cx={12 * fretWidth + fretWidth / 2}
+        cy={stringHeight * 1.5}
+        r={8}
+        fill="#cccccc"
+      />
+      <circle
+        key="inlay-12-2"
+        cx={12 * fretWidth + fretWidth / 2}
+        cy={stringHeight * 3.5}
+        r={8}
+        fill="#cccccc"
+      />
+
+
+      {/* Dibuja los marcadores de nota (círculos) */}
+      {strings.map((string, stringIndex) => (
+        <g key={`notes-${stringIndex}`}>
           {Array.from({ length: 14 }, (_, fret) => {
             const note = getNoteAtFret(string.startNote, fret);
             const isHighlighted = highlightedPositions.has(`${stringIndex}-${fret}`);
             const x = fret * fretWidth + fretWidth / 2;
             const y = stringIndex * stringHeight + stringHeight / 2;
+            const noteColor = getNoteColor(note);
 
             return (
               <g key={fret}>
                 <circle
                   cx={x}
                   cy={y}
-                  r={15}
-                  fill={isHighlighted ? 'yellow' : 'white'}
+                  r={isHighlighted ? 25 : 16}
+                  fill={isHighlighted ? noteColor : 'white'}
                   stroke="black"
-                  strokeWidth={1}
+                  strokeWidth={isHighlighted ? 2 : 1} 
                 />
                 <text
                   x={x}
                   y={y}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fontSize="10"
+                  fontSize={isHighlighted ? "17" : "14"}
                   fill="black"
                   fontFamily="Arial, sans-serif"
                 >
